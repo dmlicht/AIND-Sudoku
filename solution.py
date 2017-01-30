@@ -92,17 +92,23 @@ def reduce_puzzle(values):
     Input: A sudoku in dictionary form.
     Output: The resulting sudoku in dictionary form.
     """
-    solved_values = [box for box in values.keys() if len(values[box]) == 1]
+    constraints = [eliminate, only_choice]
     stalled = False
+    solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
+
     while not stalled:
-        solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
-        values = eliminate(values)
-        values = only_choice(values)
+        for constraint in constraints:
+            values = constraint(values)
+
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         stalled = solved_values_before == solved_values_after
+        solved_values_before = solved_values_after
+
+        # Sanity check, return False if there is a box with zero available values:
         if len([box for box in values.keys() if len(values[box]) == 0]):
             return False
     return values
+
 
 
 def search(values):
