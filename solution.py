@@ -1,3 +1,7 @@
+from collections import defaultdict
+
+from utils import *
+
 assignments = []
 
 
@@ -25,47 +29,109 @@ def naked_twins(values):
     # Eliminate the naked twins as possibilities for their peers
 
 
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    pass
-
-
-def grid_values(grid):
-    """
-    Convert grid into a dict of {square: char} with '123456789' for empties.
-    Args:
-        grid(string) - A grid in string form.
-    Returns:
-        A grid in dictionary form
-            Keys: The boxes, e.g., 'A1'
-            Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
-    """
-    pass
-
-
-def display(values):
-    """
-    Display the values as a 2-D grid.
-    Args:
-        values(dict): The sudoku in dictionary form
-    """
-    pass
-
-
 def eliminate(values):
-    pass
+    """Eliminate values from peers of each box with a single value.
+
+    Go through all the boxes, and whenever there is a box with a single value,
+    eliminate this value from the set of values of all its peers.
+
+    Args:
+        values: Sudoku in dictionary form.
+    Returns:
+        Resulting Sudoku in dictionary form after eliminating values.
+    """
+    single_values = {k: v for k, v in values.items() if len(v) == 1}
+
+    for key, val in single_values.items():
+        for peer in peers[key]:
+            values[peer] = try_remove(values[peer], val)
+    return values
+
+
+def try_remove(source, sub):
+    ## TODO: maybe I can just get rid of this.
+    if sub in source:
+        return source.replace(sub, "")
+    else:
+        return source
 
 
 def only_choice(values):
-    pass
+    """
+    Go through all the units, and whenever there is a unit with a value that only fits in one box, assign the value to this box.
+    Input: A sudoku in dictionary form.
+    Output: The resulting sudoku in dictionary form.
+    """
+    new_values = values.copy()
+
+    for unit in unitlist:
+        values_seen = value_appearence_dict(unit, values)
+        values_seen_once = {val: boxes for val, boxes in values_seen.items() if len(boxes) == 1}
+        updates = {boxes[0]: val for val, boxes in values_seen_once.items()}
+        new_values.update(updates)
+
+    # TODO: Implement only choice strategy here
+    return new_values
+
+
+def value_appearence_dict(unit, values):
+    """ Returns a dictionary mapping numbers to the list of boxes where they appear """
+
+    values_seen = defaultdict(list)
+    for box in unit:
+        for num in list(values[box]):
+            values_seen[num].append(box)
+    return values_seen
 
 
 def reduce_puzzle(values):
-    pass
+    """
+    Iterate eliminate() and only_choice(). If at some point, there is a box with no available values, return False.
+    If the sudoku is solved, return the sudoku.
+    If after an iteration of both functions, the sudoku remains the same, return the sudoku.
+    Input: A sudoku in dictionary form.
+    Output: The resulting sudoku in dictionary form.
+    """
+    solved_values = [box for box in values.keys() if len(values[box]) == 1]
+    stalled = False
+    while not stalled:
+        solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
+        values = eliminate(values)
+        values = only_choice(values)
+        solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
+        stalled = solved_values_before == solved_values_after
+        if len([box for box in values.keys() if len(values[box]) == 0]):
+            return False
+    return values
 
 
 def search(values):
-    pass
+    "Using depth-first search and propagation, create a search tree and solve the sudoku."
+
+    values = reduce_puzzle(values)
+    if not values:
+        return False
+
+    done = all(len(val) == 1 for val in values.values())
+    if done:
+        return values
+
+    # Choose one of the unfilled squares with the fewest possibilities
+    multi_option_boxes = {k: v for k, v in values.items() if len(v) > 1}
+    sorted_boxes = sorted(multi_option_boxes.items(), key=lambda x: len(x[1]))
+
+    (box, vals) = sorted_boxes[0]
+
+    # Now use recursion to solve each one of the resulting sudokus, and if one returns a value (not False), return that answer!
+    for val in vals:
+        edited_dict = dict(values)
+
+        edited_dict[box] = val
+
+        search_result = search(edited_dict)
+        if search_result:
+            return search_result
+    return False
 
 
 def solve(grid):
