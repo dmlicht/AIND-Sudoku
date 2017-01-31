@@ -28,12 +28,19 @@ def naked_twins(values):
         the values dictionary with the naked twins eliminated from peers.
     """
 
-    twins = find_twins(values)
-    for twin in twins:
-        twin_peers = [peer for peer, val in twin.unit.items() if peer not in [twin.one, twin.two]]
-        for peer in twin_peers:
-            try_remove(values[peer], twin.value)
-
+    len_2_values = {box: val for (box, val) in values.items() if len(val) == 2}
+    for len_2_box, len_2_val in len_2_values.items():
+        for unit in units[len_2_box]:
+            twins = filter_for_twin(len_2_box, len_2_val, unit, values)
+            if len(twins) == 1:
+                twin = twins[0]
+                print(unit, len_2_box, len_2_val, twin, values[twin])
+                print([values[box] for box in unit])
+                twin_peers = [peer for peer in unit if peer not in [len_2_box, twin]]
+                for peer in twin_peers:
+                    values[peer] = try_remove(values[peer], len_2_val)
+                print([values[box] for box in unit])
+    return values
 
 def find_twins(values):
     """ Find all pairs of twins within units in values """
@@ -41,15 +48,15 @@ def find_twins(values):
     len_2_values = {box: val for (box, val) in values.items() if len(val) == 2}
     for len_2_box, len_2_val in len_2_values.items():
         for unit in units[len_2_box]:
-            twins = filter_for_twin(len_2_box, len_2_val, unit)
+            twins = filter_for_twin(len_2_box, len_2_val, unit, values)
             if len(twins) == 1:
-                twin = twins.keys()[0]
+                twin = twins[0]
                 found_twins.append(TwinPair(len_2_box, twin, len_2_val, unit))
     return found_twins
 
 
-def filter_for_twin(box, val, unit):
-    return {peer_box: peer_val for peer_box, peer_val in unit.items() if box != peer_box and peer_val == val}
+def filter_for_twin(box, val, unit, values):
+    return [peer for peer in unit if box != peer and values[peer] == val]
 
 
 def eliminate(values):
@@ -73,10 +80,13 @@ def eliminate(values):
 
 def try_remove(source, sub):
     ## TODO: maybe I can just get rid of this.
-    if sub in source:
-        return source.replace(sub, "")
-    else:
-        return source
+    replaced = str(source)
+    for digit in list(sub):
+        print("trying to remove sub:", digit, "from source:", replaced)
+        if digit in replaced:
+            replaced = replaced.replace(digit, "")
+            print(replaced)
+    return replaced
 
 
 def only_choice(values):
@@ -170,6 +180,8 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
+    values = grid_values(grid)
+    return search(values)
 
 
 if __name__ == '__main__':
