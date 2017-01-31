@@ -34,12 +34,9 @@ def naked_twins(values):
             twins = filter_for_twin(len_2_box, len_2_val, unit, values)
             if len(twins) == 1:
                 twin = twins[0]
-                print(unit, len_2_box, len_2_val, twin, values[twin])
-                print([values[box] for box in unit])
                 twin_peers = [peer for peer in unit if peer not in [len_2_box, twin]]
                 for peer in twin_peers:
                     values[peer] = try_remove(values[peer], len_2_val)
-                print([values[box] for box in unit])
     return values
 
 def find_twins(values):
@@ -79,13 +76,10 @@ def eliminate(values):
 
 
 def try_remove(source, sub):
-    ## TODO: maybe I can just get rid of this.
     replaced = str(source)
     for digit in list(sub):
-        print("trying to remove sub:", digit, "from source:", replaced)
         if digit in replaced:
             replaced = replaced.replace(digit, "")
-            print(replaced)
     return replaced
 
 
