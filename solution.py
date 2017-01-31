@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 from utils import *
 
@@ -16,6 +16,9 @@ def assign_value(values, box, value):
     return values
 
 
+TwinPair = namedtuple("Twin", "one two value unit")
+
+
 def naked_twins(values):
     """Eliminate values using the naked twins strategy.
     Args:
@@ -25,8 +28,28 @@ def naked_twins(values):
         the values dictionary with the naked twins eliminated from peers.
     """
 
-    # Find all instances of naked twins
-    # Eliminate the naked twins as possibilities for their peers
+    twins = find_twins(values)
+    for twin in twins:
+        twin_peers = [peer for peer, val in twin.unit.items() if peer not in [twin.one, twin.two]]
+        for peer in twin_peers:
+            try_remove(values[peer], twin.value)
+
+
+def find_twins(values):
+    """ Find all pairs of twins within units in values """
+    found_twins = []
+    len_2_values = {box: val for (box, val) in values.items() if len(val) == 2}
+    for len_2_box, len_2_val in len_2_values.items():
+        for unit in units[len_2_box]:
+            twins = filter_for_twin(len_2_box, len_2_val, unit)
+            if len(twins) == 1:
+                twin = twins.keys()[0]
+                found_twins.append(TwinPair(len_2_box, twin, len_2_val, unit))
+    return found_twins
+
+
+def filter_for_twin(box, val, unit):
+    return {peer_box: peer_val for peer_box, peer_val in unit.items() if box != peer_box and peer_val == val}
 
 
 def eliminate(values):
@@ -70,7 +93,6 @@ def only_choice(values):
         updates = {boxes[0]: val for val, boxes in values_seen_once.items()}
         new_values.update(updates)
 
-    # TODO: Implement only choice strategy here
     return new_values
 
 
@@ -110,9 +132,8 @@ def reduce_puzzle(values):
     return values
 
 
-
 def search(values):
-    "Using depth-first search and propagation, create a search tree and solve the sudoku."
+    """Using depth-first search and propagation, create a search tree and solve the sudoku."""
 
     values = reduce_puzzle(values)
     if not values:

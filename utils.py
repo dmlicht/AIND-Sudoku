@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 rows = 'ABCDEFGHI'
 cols = '123456789'
 
