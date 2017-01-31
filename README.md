@@ -3,11 +3,14 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: *Student should provide answer here*
+A: We add an additional constraint, `naked_twins` to our `reduce_puzzle` function. The `reduce_puzzle` function
+iteratively removes values from squares that would violate constraints. `The naked_twins` constraint prevents any
+boxes from containing any of the same values as a pair of unit peers that have exactly two values that are the same
+as one another.
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
-A: *Student should provide answer here*
+A: We simply added two additionally unit, the diagonal units, to the set of units that we check our constraints against.
 
 ### Install
 
