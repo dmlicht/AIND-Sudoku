@@ -118,7 +118,7 @@ def reduce_puzzle(values):
     Input: A sudoku in dictionary form.
     Output: The resulting sudoku in dictionary form.
     """
-    constraints = [eliminate, only_choice]
+    constraints = [eliminate, only_choice, naked_twins]
     stalled = False
     solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
 
